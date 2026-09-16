@@ -1,0 +1,2292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>CFX Maestro Plate Map Generator</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+    background: #f4f6f8;
+    color: #222;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 25px;
+}
+
+h1 {
+    margin-top: 0;
+    color: #1f4e79;
+}
+
+h2 {
+    color: #1f4e79;
+    margin-top: 10px;
+}
+
+h3 {
+    color: #333;
+}
+
+.subtitle {
+    color: #555;
+    margin-bottom: 25px;
+}
+
+.card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.10);
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
+textarea,
+input[type="text"],
+select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #bbb;
+    border-radius: 5px;
+    font-size: 15px;
+    background: white;
+}
+
+textarea {
+    min-height: 220px;
+    resize: vertical;
+    font-family: Consolas, monospace;
+}
+
+.field {
+    margin-bottom: 18px;
+}
+
+.help {
+    color: #666;
+    font-size: 13px;
+    line-height: 1.5;
+    margin-top: 5px;
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.button-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+button {
+    border: none;
+    border-radius: 5px;
+    padding: 12px 20px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.primary {
+    background: #1f6fb2;
+    color: white;
+}
+
+.primary:hover {
+    background: #15578e;
+}
+
+.success {
+    background: #218838;
+    color: white;
+}
+
+.success:hover {
+    background: #176b2b;
+}
+
+.secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.message {
+    padding: 14px 18px;
+    border-radius: 6px;
+    margin: 15px 0;
+    line-height: 1.5;
+}
+
+.success-message {
+    background: #dff2df;
+    border: 1px solid #a8d5a8;
+    color: #245b24;
+}
+
+.warning-message {
+    background: #fff3cd;
+    border: 1px solid #ffe08a;
+    color: #705600;
+}
+
+.error-message {
+    background: #f8d7da;
+    border: 1px solid #e5a3a8;
+    color: #842029;
+}
+
+.info-message {
+    background: #dcecf8;
+    border: 1px solid #a9cde8;
+    color: #194d70;
+}
+
+/* -----------------------------
+   Plate
+----------------------------- */
+
+.plate-wrapper {
+    overflow-x: auto;
+    padding-bottom: 10px;
+}
+
+.plate {
+    border-collapse: separate;
+    border-spacing: 5px;
+    margin: 10px auto;
+}
+
+.plate th {
+    font-size: 13px;
+    color: #555;
+    min-width: 82px;
+    height: 25px;
+}
+
+.plate .row-label {
+    min-width: 25px;
+    width: 25px;
+}
+
+.well {
+    width: 82px;
+    height: 65px;
+    min-width: 82px;
+    border-radius: 9px;
+    border: 1px solid #aaa;
+    text-align: center;
+    vertical-align: middle;
+    padding: 4px;
+    font-size: 11px;
+    word-break: break-word;
+}
+
+.well-empty {
+    background: #eeeeee;
+    color: #aaa;
+}
+
+.well-ntc {
+    background: #d9eaff;
+    border-color: #4a90e2;
+}
+
+.well-pos {
+    background: #dff3df;
+    border-color: #4caf50;
+}
+
+.well-neg {
+    background: #ffe1e1;
+    border-color: #e05a5a;
+}
+
+.well-unknown {
+    background: #fff5cf;
+    border-color: #d6b548;
+}
+
+.well-name {
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.well-type {
+    font-size: 9px;
+    margin-top: 4px;
+}
+
+.legend {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin: 15px 0;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+}
+
+.legend-box {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 1px solid #999;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    background: white;
+}
+
+.data-table th,
+.data-table td {
+    border: 1px solid #ccc;
+    padding: 7px 8px;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.data-table th {
+    background: #e9eef3;
+}
+
+.hidden {
+    display: none;
+}
+
+.footer {
+    margin-top: 30px;
+    font-size: 12px;
+    color: #777;
+    line-height: 1.5;
+}
+
+@media (max-width: 800px) {
+
+    .grid-2 {
+        grid-template-columns: 1fr;
+    }
+
+    .container {
+        padding: 12px;
+    }
+
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div class="container">
+
+<h1>CFX Maestro 96-Well Plate Map Generator</h1>
+
+<div class="subtitle">
+    Designed for Bio-Rad CFX Maestro 2.2,
+    version 5.2.008/0222 (2021)
+</div>
+
+
+<!-- =========================================================
+     SAMPLE LIST
+========================================================= -->
+
+<div class="card">
+
+<h2>1. Sample List</h2>
+
+<div class="field">
+
+<label for="sampleList">
+    Paste your samples/isolate names
+</label>
+
+<textarea
+    id="sampleList"
+    placeholder="Paste one sample name per line..."
+>Water
+791
+792
+794
+827
+965
+974
+975
+1061
+1757</textarea>
+
+<div class="help">
+
+    Paste one sample/isolate per line.
+
+    <br><br>
+
+    Blank lines are ignored.
+
+    <br>
+
+    Sample names are preserved exactly as pasted,
+    including capitalization, spaces, punctuation,
+    and numbers.
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- =========================================================
+     CONTROLS
+========================================================= -->
+
+<div class="card">
+
+<h2>2. Controls</h2>
+
+<div class="info-message">
+
+<strong>Important:</strong>
+
+Controls are used here to identify and visually highlight
+control wells in the plate map.
+
+Because the CFX Maestro CSV template supplied for this
+application contains only:
+
+<br><br>
+
+<code>
+Row, Column, *Target Name, *Sample Name, *Biological Group
+</code>
+
+<br><br>
+
+the control type is <strong>not exported to the CSV</strong>.
+
+After importing the plate map into CFX Maestro, assign
+the appropriate Sample Type (NTC, Positive Control,
+Negative Control, etc.) in the software.
+
+</div>
+
+
+<div class="grid-2">
+
+<div class="field">
+
+<label for="ntc">
+    NTC / No Template Control
+</label>
+
+<input
+    type="text"
+    id="ntc"
+    value="Water"
+    placeholder="Example: Water"
+/>
+
+<div class="help">
+
+    Enter one or more sample names exactly as they
+    appear in the sample list.
+
+    <br>
+
+    Multiple names can be separated by commas.
+
+    <br><br>
+
+    Example:
+    <code>Water, Blank, NTC1</code>
+
+</div>
+
+</div>
+
+
+<div class="field">
+
+<label for="positive">
+    Positive Control
+</label>
+
+<input
+    type="text"
+    id="positive"
+    value="794"
+    placeholder="Example: 794"
+/>
+
+<div class="help">
+
+    Example:
+    <code>794</code>
+
+</div>
+
+</div>
+
+
+<div class="field">
+
+<label for="negative">
+    Negative Control
+</label>
+
+<input
+    type="text"
+    id="negative"
+    value=""
+    placeholder="Leave blank if none"
+/>
+
+<div class="help">
+
+    Leave blank if you do not have a negative control.
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="help">
+
+<strong>Case-sensitive:</strong>
+
+Control names must match the pasted sample name exactly.
+
+For example:
+
+<code>Water</code> matches <code>Water</code>,
+
+but <code>water</code> does not.
+
+</div>
+
+</div>
+
+
+<!-- =========================================================
+     REPLICATES
+========================================================= -->
+
+<div class="card">
+
+<h2>3. Technical Replicates</h2>
+
+<div class="grid-2">
+
+<div class="field">
+
+<label for="replicates">
+    Number of wells per sample
+</label>
+
+<select id="replicates">
+
+<option value="1">
+    Singlets
+</option>
+
+<option value="2" selected>
+    Duplicates
+</option>
+
+<option value="3">
+    Triplicates
+</option>
+
+</select>
+
+<div class="help">
+
+    Default: duplicates.
+
+</div>
+
+</div>
+
+
+<div class="field">
+
+<label for="orientation">
+    Replicate orientation
+</label>
+
+<select id="orientation">
+
+<option value="vertical" selected>
+    Vertical
+</option>
+
+<option value="horizontal">
+    Horizontal
+</option>
+
+</select>
+
+<div class="help">
+
+    <strong>Vertical:</strong>
+    replicates are stacked down the same column.
+
+    <br>
+
+    <strong>Horizontal:</strong>
+    replicates are placed across adjacent columns.
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="warning-message">
+
+<strong>Important — Replicate assignment:</strong>
+
+This tool places the replicate wells together in the
+requested orientation, but it does <strong>not</strong>
+assign a Replicate # in the CSV.
+
+After importing the plate map into CFX Maestro,
+you will need to assign the technical replicate groups
+using the CFX Maestro software.
+
+</div>
+
+</div>
+
+
+<!-- =========================================================
+     TARGET
+========================================================= -->
+
+<div class="card">
+
+<h2>4. Target</h2>
+
+<div class="field">
+
+<label for="target">
+    Target Name
+</label>
+
+<input
+    type="text"
+    id="target"
+    value="Folac"
+    placeholder="Example: Folac"
+/>
+
+<div class="help">
+
+    Enter the target name used for this assay.
+
+    <br>
+
+    Example:
+    <code>Folac</code>
+
+</div>
+
+</div>
+
+
+<div class="info-message">
+
+<strong>Using two targets?</strong>
+
+This generator creates the plate map for one target.
+
+If your experiment has a second target, it is easier to
+add/configure that target directly in CFX Maestro after
+the plate map has been uploaded.
+
+</div>
+
+</div>
+
+
+<!-- =========================================================
+     BIOLOGICAL GROUP
+========================================================= -->
+
+<div class="card">
+
+<h2>5. Biological Group</h2>
+
+<div class="info-message">
+
+<strong>Biological Group is intentionally left blank.</strong>
+
+<br><br>
+
+You can add or edit Biological Group information easily
+in CFX Maestro after the plate map has been uploaded.
+
+</div>
+
+</div>
+
+
+<!-- =========================================================
+     GENERATE
+========================================================= -->
+
+<div class="card">
+
+<button
+    class="primary"
+    onclick="generatePlate()"
+>
+    Generate Plate Map
+</button>
+
+<button
+    class="secondary"
+    onclick="clearResults()"
+    style="margin-left:10px;"
+>
+    Clear Results
+</button>
+
+</div>
+
+
+<!-- =========================================================
+     STATUS
+========================================================= -->
+
+<div id="status"></div>
+
+
+<!-- =========================================================
+     PLATE
+========================================================= -->
+
+<div
+    class="card hidden"
+    id="plateCard"
+>
+
+<h2>96-Well Plate Map</h2>
+
+<div class="legend">
+
+<div class="legend-item">
+    <span class="legend-box well-ntc"></span>
+    NTC
+</div>
+
+<div class="legend-item">
+    <span class="legend-box well-pos"></span>
+    Positive Control
+</div>
+
+<div class="legend-item">
+    <span class="legend-box well-neg"></span>
+    Negative Control
+</div>
+
+<div class="legend-item">
+    <span class="legend-box well-unknown"></span>
+    Unknown
+</div>
+
+<div class="legend-item">
+    <span class="legend-box well-empty"></span>
+    Empty
+</div>
+
+</div>
+
+
+<div class="plate-wrapper">
+
+<table
+    class="plate"
+    id="plate"
+></table>
+
+</div>
+
+</div>
+
+
+<!-- =========================================================
+     DATA
+========================================================= -->
+
+<div
+    class="card hidden"
+    id="dataCard"
+>
+
+<h2>CFX Maestro CSV Data</h2>
+
+<div class="help">
+
+The exported CSV contains exactly these five columns:
+
+<br><br>
+
+<code>
+Row |
+Column |
+*Target Name |
+*Sample Name |
+*Biological Group
+</code>
+
+<br><br>
+
+Biological Group is left blank.
+
+Replicate numbers and Sample Type are not exported.
+
+</div>
+
+<br>
+
+<div class="table-wrapper">
+
+<table
+    class="data-table"
+    id="dataTable"
+></table>
+
+</div>
+
+</div>
+
+
+<!-- =========================================================
+     DOWNLOAD
+========================================================= -->
+
+<div
+    class="card hidden"
+    id="downloadCard"
+>
+
+<h2>Export</h2>
+
+<div class="success-message">
+
+<strong>Your plate map has been generated.</strong>
+
+<br><br>
+
+Review the plate carefully before importing it into
+CFX Maestro.
+
+After importing:
+
+<ul>
+
+<li>
+Assign NTC / Positive Control / Negative Control
+Sample Types in CFX Maestro.
+</li>
+
+<li>
+Assign technical replicate groups in CFX Maestro.
+</li>
+
+<li>
+Add Biological Group information if needed.
+</li>
+
+<li>
+Add a second target if required.
+</li>
+
+</ul>
+
+</div>
+
+
+<div class="button-row">
+
+<button
+    class="success"
+    onclick="downloadCSV()"
+>
+    Download CFX Maestro CSV
+</button>
+
+
+<button
+    class="secondary"
+    onclick="downloadSummary()"
+>
+    Download Plate Summary
+</button>
+
+</div>
+
+</div>
+
+
+<!-- =========================================================
+     FOOTER
+========================================================= -->
+
+<div class="footer">
+
+<strong>Target software:</strong>
+
+Bio-Rad CFX Maestro 2.2,
+version 5.2.008/0222 (2021).
+
+<br><br>
+
+<strong>CSV structure:</strong>
+
+This application uses the five-column CFX Maestro
+template supplied by the user:
+
+<br>
+
+Row | Column | *Target Name | *Sample Name | *Biological Group
+
+<br><br>
+
+The application runs entirely in your browser.
+Sample information is not uploaded to a server.
+
+<br><br>
+
+Always inspect the generated plate map and verify the
+imported plate in CFX Maestro before beginning an
+experimental run.
+
+</div>
+
+</div>
+
+
+<script>
+
+
+/* =========================================================
+   GLOBAL DATA
+========================================================= */
+
+let generatedData = [];
+
+
+/* =========================================================
+   PARSE CONTROL INPUT
+========================================================= */
+
+function parseControlInput(value) {
+
+    if (!value || value.trim() === "") {
+        return [];
+    }
+
+    return value
+        .split(",")
+        .map(x => x.trim())
+        .filter(x => x !== "");
+
+}
+
+
+/* =========================================================
+   SAMPLE LIST
+========================================================= */
+
+function getSamples() {
+
+    const text =
+        document.getElementById("sampleList").value;
+
+    return text
+        .replace(/\r/g, "")
+        .split("\n")
+        .filter(x => x.trim() !== "");
+
+}
+
+
+/* =========================================================
+   HTML ESCAPE
+========================================================= */
+
+function escapeHTML(value) {
+
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+function showStatus(message, type) {
+
+    document.getElementById("status").innerHTML =
+
+        `<div class="message ${type}-message">
+            ${message}
+        </div>`;
+
+}
+
+
+/* =========================================================
+   SAMPLE TYPE
+   Used only for browser visualization.
+   NOT exported to CSV.
+========================================================= */
+
+function getSampleType(
+    sample,
+    ntcSamples,
+    positiveSamples,
+    negativeSamples
+) {
+
+    if (ntcSamples.includes(sample)) {
+        return "NTC";
+    }
+
+    if (positiveSamples.includes(sample)) {
+        return "Pos Ctrl";
+    }
+
+    if (negativeSamples.includes(sample)) {
+        return "Neg Ctrl";
+    }
+
+    return "Unkn";
+
+}
+
+
+/* =========================================================
+   WELL COORDINATES
+========================================================= */
+
+function wellCoordinates(wellNumber) {
+
+    const rowNumber =
+        ((wellNumber - 1) % 8);
+
+    const column =
+        Math.floor((wellNumber - 1) / 8) + 1;
+
+    const row =
+        String.fromCharCode(65 + rowNumber);
+
+    return {
+        row: row,
+        column: column
+    };
+
+}
+
+
+/* =========================================================
+   WELL NUMBER
+========================================================= */
+
+function wellNumber(row, column) {
+
+    return ((column - 1) * 8) + row;
+
+}
+
+
+/* =========================================================
+   GET REPLICATE WELLS
+========================================================= */
+
+function getReplicateWells(
+    currentWell,
+    replicateCount,
+    orientation
+) {
+
+    const start =
+        wellCoordinates(currentWell);
+
+    const startRow =
+        start.row.charCodeAt(0) - 65;
+
+    const startColumn =
+        start.column;
+
+    const wells = [];
+
+
+    /* -----------------------------------------------------
+       VERTICAL
+    ----------------------------------------------------- */
+
+    if (orientation === "vertical") {
+
+        /*
+         * A1
+         * B1
+         * C1
+         *
+         * Replicates stay together vertically.
+         */
+
+        if (
+            startRow + replicateCount <= 8
+        ) {
+
+            for (
+                let i = 0;
+                i < replicateCount;
+                i++
+            ) {
+
+                wells.push(
+                    wellNumber(
+                        startRow + i + 1,
+                        startColumn
+                    )
+                );
+
+            }
+
+        } else {
+
+            /*
+             * Not enough room at the bottom.
+             * Move group to next column, starting at A.
+             */
+
+            const nextColumn =
+                startColumn + 1;
+
+            for (
+                let i = 0;
+                i < replicateCount;
+                i++
+            ) {
+
+                wells.push(
+                    wellNumber(
+                        i + 1,
+                        nextColumn
+                    )
+                );
+
+            }
+
+        }
+
+    }
+
+
+    /* -----------------------------------------------------
+       HORIZONTAL
+    ----------------------------------------------------- */
+
+    else {
+
+        /*
+         * A1 A2 A3
+         */
+
+        if (
+            startColumn + replicateCount - 1 <= 12
+        ) {
+
+            for (
+                let i = 0;
+                i < replicateCount;
+                i++
+            ) {
+
+                wells.push(
+                    wellNumber(
+                        startRow + 1,
+                        startColumn + i
+                    )
+                );
+
+            }
+
+        } else {
+
+            /*
+             * Not enough columns remaining.
+             * Move group to next row.
+             */
+
+            const nextRow =
+                startRow + 1;
+
+            for (
+                let i = 0;
+                i < replicateCount;
+                i++
+            ) {
+
+                wells.push(
+                    wellNumber(
+                        nextRow + 1,
+                        i + 1
+                    )
+                );
+
+            }
+
+        }
+
+    }
+
+
+    return wells;
+
+}
+
+
+/* =========================================================
+   GENERATE PLATE
+========================================================= */
+
+function generatePlate() {
+
+    generatedData = [];
+
+
+    /* -----------------------------------------------------
+       Read inputs
+    ----------------------------------------------------- */
+
+    const samples =
+        getSamples();
+
+    const ntcSamples =
+        parseControlInput(
+            document.getElementById("ntc").value
+        );
+
+    const positiveSamples =
+        parseControlInput(
+            document.getElementById("positive").value
+        );
+
+    const negativeSamples =
+        parseControlInput(
+            document.getElementById("negative").value
+        );
+
+    const replicateCount =
+        Number(
+            document.getElementById("replicates").value
+        );
+
+    const orientation =
+        document.getElementById("orientation").value;
+
+    const target =
+        document.getElementById("target").value;
+
+
+    /* -----------------------------------------------------
+       Validate samples
+    ----------------------------------------------------- */
+
+    if (samples.length === 0) {
+
+        showStatus(
+            "Please paste at least one sample.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    /* -----------------------------------------------------
+       Validate target
+    ----------------------------------------------------- */
+
+    if (!target.trim()) {
+
+        showStatus(
+            "Please enter a Target Name.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    /* -----------------------------------------------------
+       Validate controls
+    ----------------------------------------------------- */
+
+    const allControlNames = [
+
+        ...ntcSamples,
+        ...positiveSamples,
+        ...negativeSamples
+
+    ];
+
+
+    const missingControls =
+        allControlNames.filter(
+            x => !samples.includes(x)
+        );
+
+
+    if (missingControls.length > 0) {
+
+        showStatus(
+
+            `<strong>Control name not found.</strong>
+            <br><br>
+            The following control name(s) were not found
+            in the pasted sample list:
+            <br><br>
+            <strong>
+            ${missingControls.map(escapeHTML).join(", ")}
+            </strong>
+            <br><br>
+            Control matching is case-sensitive.`,
+
+            "error"
+        );
+
+        return;
+    }
+
+
+    /* -----------------------------------------------------
+       Check conflicts
+    ----------------------------------------------------- */
+
+    const conflicts = [];
+
+
+    ntcSamples.forEach(sample => {
+
+        if (
+            positiveSamples.includes(sample) ||
+            negativeSamples.includes(sample)
+        ) {
+
+            conflicts.push(sample);
+
+        }
+
+    });
+
+
+    positiveSamples.forEach(sample => {
+
+        if (
+            negativeSamples.includes(sample)
+        ) {
+
+            conflicts.push(sample);
+
+        }
+
+    });
+
+
+    if (conflicts.length > 0) {
+
+        showStatus(
+
+            `<strong>Control assignment conflict.</strong>
+            <br><br>
+            The following sample(s) have been assigned
+            to more than one control type:
+            <br><br>
+            <strong>
+            ${[...new Set(conflicts)]
+                .map(escapeHTML)
+                .join(", ")}
+            </strong>`,
+
+            "error"
+        );
+
+        return;
+    }
+
+
+    /* -----------------------------------------------------
+       Remove duplicate input lines
+    ----------------------------------------------------- */
+
+    const uniqueSamples =
+        [...new Set(samples)];
+
+
+    /* -----------------------------------------------------
+       Controls first
+    ----------------------------------------------------- */
+
+    const controlSet =
+        new Set([
+
+            ...ntcSamples,
+            ...positiveSamples,
+            ...negativeSamples
+
+        ]);
+
+
+    const controls =
+        uniqueSamples.filter(
+            sample => controlSet.has(sample)
+        );
+
+
+    const unknowns =
+        uniqueSamples.filter(
+            sample => !controlSet.has(sample)
+        );
+
+
+    const orderedSamples = [
+
+        ...controls,
+        ...unknowns
+
+    ];
+
+
+    /* -----------------------------------------------------
+       Check capacity
+    ----------------------------------------------------- */
+
+    const wellsRequired =
+        orderedSamples.length *
+        replicateCount;
+
+
+    if (wellsRequired > 96) {
+
+        const capacity =
+            Math.floor(
+                96 / replicateCount
+            );
+
+
+        showStatus(
+
+            `<strong>Plate is full.</strong>
+            <br><br>
+            Your settings require
+            <strong>${wellsRequired} wells</strong>
+            for ${orderedSamples.length} samples
+            with ${replicateCount} replicate(s) each.
+            <br><br>
+            A 96-well plate can accommodate a maximum of
+            <strong>${capacity} samples</strong>
+            with this replicate setting.
+            <br><br>
+            Remove samples or change the replicate setting.`,
+
+            "error"
+        );
+
+        return;
+    }
+
+
+    /* -----------------------------------------------------
+       Generate layout
+    ----------------------------------------------------- */
+
+    let currentWell = 1;
+
+
+    for (
+        let sampleIndex = 0;
+        sampleIndex < orderedSamples.length;
+        sampleIndex++
+    ) {
+
+        const sample =
+            orderedSamples[sampleIndex];
+
+
+        const sampleType =
+            getSampleType(
+                sample,
+                ntcSamples,
+                positiveSamples,
+                negativeSamples
+            );
+
+
+        let replicateWells =
+            getReplicateWells(
+                currentWell,
+                replicateCount,
+                orientation
+            );
+
+
+        /* -------------------------------------------------
+           Make sure wells are valid
+        ------------------------------------------------- */
+
+        if (
+            replicateWells.some(
+                w =>
+                    w < 1 ||
+                    w > 96
+            )
+        ) {
+
+            showStatus(
+
+                `<strong>Plate is full.</strong>
+                <br><br>
+                There is not enough room to place
+                the replicates for:
+                <strong>${escapeHTML(sample)}</strong>.`,
+
+                "error"
+            );
+
+            generatedData = [];
+
+            return;
+        }
+
+
+        /* -------------------------------------------------
+           Check for overlap
+        ------------------------------------------------- */
+
+        const occupied =
+            new Set(
+                generatedData.map(
+                    x => x._wellNumber
+                )
+            );
+
+
+        let overlap =
+            replicateWells.some(
+                w => occupied.has(w)
+            );
+
+
+        /*
+         * Find the next available valid group if
+         * necessary.
+         */
+
+        if (overlap) {
+
+            let found = false;
+
+
+            for (
+                let candidate = currentWell;
+                candidate <= 96;
+                candidate++
+            ) {
+
+                const candidateWells =
+                    getReplicateWells(
+                        candidate,
+                        replicateCount,
+                        orientation
+                    );
+
+
+                const valid =
+                    candidateWells.every(
+                        w =>
+                            w >= 1 &&
+                            w <= 96 &&
+                            !occupied.has(w)
+                    );
+
+
+                if (valid) {
+
+                    replicateWells =
+                        candidateWells;
+
+                    currentWell =
+                        candidate;
+
+                    found = true;
+
+                    break;
+                }
+
+            }
+
+
+            if (!found) {
+
+                showStatus(
+
+                    "The plate is full. The remaining sample could not be placed.",
+
+                    "error"
+                );
+
+                generatedData = [];
+
+                return;
+            }
+
+        }
+
+
+        /* -------------------------------------------------
+           Add wells
+        ------------------------------------------------- */
+
+        for (
+            const well of replicateWells
+        ) {
+
+            const coords =
+                wellCoordinates(well);
+
+
+            generatedData.push({
+
+                Row:
+                    coords.row,
+
+                Column:
+                    coords.column,
+
+                "*Target Name":
+                    target,
+
+                "*Sample Name":
+                    sample,
+
+                "*Biological Group":
+                    "",
+
+                /*
+                 * Internal fields used only by
+                 * the browser.
+                 */
+
+                _wellNumber:
+                    well,
+
+                _sampleType:
+                    sampleType
+
+            });
+
+        }
+
+
+        /* -------------------------------------------------
+           Next position
+        ------------------------------------------------- */
+
+        currentWell =
+            Math.max(
+                ...replicateWells
+            ) + 1;
+
+    }
+
+
+    /* -----------------------------------------------------
+       Sort plate order
+    ----------------------------------------------------- */
+
+    generatedData.sort(
+
+        (a, b) => {
+
+            const aWell =
+                a.Column * 8 +
+                (a.Row.charCodeAt(0) - 64);
+
+            const bWell =
+                b.Column * 8 +
+                (b.Row.charCodeAt(0) - 64);
+
+            return aWell - bWell;
+
+        }
+
+    );
+
+
+    /* -----------------------------------------------------
+       Results
+    ----------------------------------------------------- */
+
+    const wellsUsed =
+        generatedData.length;
+
+    const wellsRemaining =
+        96 - wellsUsed;
+
+
+    showStatus(
+
+        `<strong>Plate generated successfully.</strong>
+        <br><br>
+        ${orderedSamples.length} sample(s) |
+        ${wellsUsed} well(s) used |
+        ${wellsRemaining} well(s) remaining.
+        <br><br>
+
+        Controls are highlighted in the plate preview.
+        <br>
+
+        <strong>
+        Remember: assign Sample Type and technical
+        replicate groups in CFX Maestro after import.
+        </strong>`,
+
+        "success"
+    );
+
+
+    renderPlate();
+
+    renderDataTable();
+
+
+    document
+        .getElementById("plateCard")
+        .classList.remove("hidden");
+
+    document
+        .getElementById("dataCard")
+        .classList.remove("hidden");
+
+    document
+        .getElementById("downloadCard")
+        .classList.remove("hidden");
+
+}
+
+
+/* =========================================================
+   RENDER PLATE
+========================================================= */
+
+function renderPlate() {
+
+    const table =
+        document.getElementById("plate");
+
+    table.innerHTML = "";
+
+
+    /* Header */
+
+    const header =
+        document.createElement("tr");
+
+
+    const blank =
+        document.createElement("th");
+
+    blank.className =
+        "row-label";
+
+    header.appendChild(blank);
+
+
+    for (
+        let col = 1;
+        col <= 12;
+        col++
+    ) {
+
+        const th =
+            document.createElement("th");
+
+        th.textContent =
+            col;
+
+        header.appendChild(th);
+
+    }
+
+
+    table.appendChild(header);
+
+
+    /* Rows */
+
+    for (
+        let row = 0;
+        row < 8;
+        row++
+    ) {
+
+        const tr =
+            document.createElement("tr");
+
+
+        const rowLabel =
+            document.createElement("th");
+
+        rowLabel.className =
+            "row-label";
+
+        rowLabel.textContent =
+            String.fromCharCode(
+                65 + row
+            );
+
+        tr.appendChild(rowLabel);
+
+
+        for (
+            let col = 1;
+            col <= 12;
+            col++
+        ) {
+
+            const td =
+                document.createElement("td");
+
+
+            const well =
+                generatedData.find(
+
+                    x =>
+                        x.Row ===
+                            String.fromCharCode(
+                                65 + row
+                            )
+                        &&
+                        x.Column === col
+
+                );
+
+
+            if (!well) {
+
+                td.className =
+                    "well well-empty";
+
+                td.innerHTML =
+                    "Empty";
+
+            } else {
+
+                switch (
+                    well._sampleType
+                ) {
+
+                    case "NTC":
+
+                        td.className =
+                            "well well-ntc";
+
+                        break;
+
+                    case "Pos Ctrl":
+
+                        td.className =
+                            "well well-pos";
+
+                        break;
+
+                    case "Neg Ctrl":
+
+                        td.className =
+                            "well well-neg";
+
+                        break;
+
+                    default:
+
+                        td.className =
+                            "well well-unknown";
+
+                }
+
+
+                td.innerHTML =
+
+                    `<div class="well-name">
+                        ${escapeHTML(
+                            well["*Sample Name"]
+                        )}
+                    </div>
+
+                    <div class="well-type">
+                        ${escapeHTML(
+                            well._sampleType
+                        )}
+                    </div>`;
+
+            }
+
+
+            tr.appendChild(td);
+
+        }
+
+
+        table.appendChild(tr);
+
+    }
+
+}
+
+
+/* =========================================================
+   DATA TABLE
+========================================================= */
+
+function renderDataTable() {
+
+    const table =
+        document.getElementById("dataTable");
+
+    table.innerHTML = "";
+
+
+    const headers = [
+
+        "Row",
+        "Column",
+        "*Target Name",
+        "*Sample Name",
+        "*Biological Group"
+
+    ];
+
+
+    const thead =
+        document.createElement("thead");
+
+    const headerRow =
+        document.createElement("tr");
+
+
+    headers.forEach(header => {
+
+        const th =
+            document.createElement("th");
+
+        th.textContent =
+            header;
+
+        headerRow.appendChild(th);
+
+    });
+
+
+    thead.appendChild(headerRow);
+
+    table.appendChild(thead);
+
+
+    const tbody =
+        document.createElement("tbody");
+
+
+    generatedData.forEach(row => {
+
+        const tr =
+            document.createElement("tr");
+
+
+        headers.forEach(header => {
+
+            const td =
+                document.createElement("td");
+
+            td.textContent =
+                row[header];
+
+            tr.appendChild(td);
+
+        });
+
+
+        tbody.appendChild(tr);
+
+    });
+
+
+    table.appendChild(tbody);
+
+}
+
+
+/* =========================================================
+   CSV ESCAPE
+========================================================= */
+
+function csvEscape(value) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return "";
+
+    }
+
+
+    const stringValue =
+        String(value);
+
+
+    if (
+
+        stringValue.includes(",") ||
+        stringValue.includes('"') ||
+        stringValue.includes("\n") ||
+        stringValue.includes("\r")
+
+    ) {
+
+        return '"' +
+            stringValue.replace(
+                /"/g,
+                '""'
+            ) +
+            '"';
+
+    }
+
+
+    return stringValue;
+
+}
+
+
+/* =========================================================
+   CREATE CSV
+========================================================= */
+
+function createCSV() {
+
+    /*
+     * EXACT CFX MAESTRO TEMPLATE
+     */
+
+    const headers = [
+
+        "Row",
+        "Column",
+        "*Target Name",
+        "*Sample Name",
+        "*Biological Group"
+
+    ];
+
+
+    const lines = [];
+
+
+    lines.push(
+        headers
+            .map(csvEscape)
+            .join(",")
+    );
+
+
+    generatedData.forEach(row => {
+
+        lines.push(
+
+            headers
+                .map(
+                    header =>
+                        csvEscape(
+                            row[header]
+                        )
+                )
+                .join(",")
+
+        );
+
+    });
+
+
+    return lines.join("\r\n");
+
+}
+
+
+/* =========================================================
+   DOWNLOAD CFX CSV
+========================================================= */
+
+function downloadCSV() {
+
+    if (
+        generatedData.length === 0
+    ) {
+
+        showStatus(
+            "Generate a plate map before downloading.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    const csv =
+        createCSV();
+
+
+    const blob =
+        new Blob(
+
+            [csv],
+
+            {
+                type:
+                    "text/csv;charset=utf-8;"
+            }
+
+        );
+
+
+    const url =
+        URL.createObjectURL(blob);
+
+
+    const link =
+        document.createElement("a");
+
+    link.href =
+        url;
+
+    link.download =
+        "CFX_Maestro_Plate_Map.csv";
+
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+
+}
+
+
+/* =========================================================
+   SUMMARY DOWNLOAD
+========================================================= */
+
+function downloadSummary() {
+
+    if (
+        generatedData.length === 0
+    ) {
+
+        showStatus(
+            "Generate a plate map before downloading.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    const headers = [
+
+        "Well",
+        "Sample",
+        "Control / Sample Type",
+        "Target"
+
+    ];
+
+
+    const lines = [];
+
+
+    lines.push(
+        headers
+            .map(csvEscape)
+            .join(",")
+    );
+
+
+    generatedData.forEach(row => {
+
+        const values = [
+
+            row.Row +
+                row.Column,
+
+            row["*Sample Name"],
+
+            row._sampleType,
+
+            row["*Target Name"]
+
+        ];
+
+
+        lines.push(
+
+            values
+                .map(csvEscape)
+                .join(",")
+
+        );
+
+    });
+
+
+    const csv =
+        lines.join("\r\n");
+
+
+    const blob =
+        new Blob(
+
+            [csv],
+
+            {
+                type:
+                    "text/csv;charset=utf-8;"
+            }
+
+        );
+
+
+    const url =
+        URL.createObjectURL(blob);
+
+
+    const link =
+        document.createElement("a");
+
+    link.href =
+        url;
+
+    link.download =
+        "CFX_Maestro_Plate_Summary.csv";
+
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+
+}
+
+
+/* =========================================================
+   CLEAR
+========================================================= */
+
+function clearResults() {
+
+    generatedData = [];
+
+
+    document
+        .getElementById("plateCard")
+        .classList.add("hidden");
+
+
+    document
+        .getElementById("dataCard")
+        .classList.add("hidden");
+
+
+    document
+        .getElementById("downloadCard")
+        .classList.add("hidden");
+
+
+    document
+        .getElementById("status")
+        .innerHTML = "";
+
+}
+
+</script>
+<div class="footer" style="margin-top: 25px; padding-top: 15px; border-top: 1px solid #ccc; text-align: center;">
+
+    <div>
+        <strong>Author:</strong> Nikki Lukasko
+    </div>
+
+    <div>
+        <strong>Date:</strong> September 16, 2026
+    </div>
+
+    <div style="margin-top: 8px;">
+        Designed for Bio-Rad CFX Maestro 2.2,
+        version 5.2.008/0222 (2021)
+    </div>
+
+</div>
+
+</body>
+</html>
